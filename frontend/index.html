@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Dairy Monitor — Live Dashboard</title>
+  <meta name="description" content="Local simulation dashboard for Smart Dairy Monitor ESP32 project — real-time sensor values from diagram.json." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon">🥛</div>
+        <div>
+          <h1 class="brand-title">Smart Dairy Monitor</h1>
+          <p class="brand-sub">ESP32 · diagram.json · Local Simulation</p>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="product-selector">
+          <span class="product-label">Product:</span>
+          <button class="prod-btn active" id="btn-MILK"   onclick="selectProduct('MILK')">🥛 Milk</button>
+          <button class="prod-btn"        id="btn-CURD"   onclick="selectProduct('CURD')">🍶 Curd</button>
+          <button class="prod-btn"        id="btn-CHEESE" onclick="selectProduct('CHEESE')">🧀 Cheese</button>
+          <button class="prod-btn"        id="btn-BUTTER" onclick="selectProduct('BUTTER')">🧈 Butter</button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="conn-badge">
+          <span class="conn-dot live" id="connDot"></span>
+          <span id="connLabel">Connecting…</span>
+        </div>
+        <div class="sim-badge">⚡ Local Sim</div>
+        <div class="last-updated" id="lastUpdated">—</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN ═══════════════ -->
+  <main class="main">
+
+    <!-- ─── STATUS HERO ─── -->
+    <section class="status-hero" id="statusHero">
+      <div class="status-glow" id="statusGlow"></div>
+      <div class="status-content">
+        <div class="status-label">Quality Status</div>
+        <div class="status-badge" id="statusBadge">⏳ LOADING</div>
+        <div class="status-scores" id="statusScores">Danger: — &nbsp;|&nbsp; Warning: —</div>
+      </div>
+      <div class="led-row">
+        <div class="led-item"><div class="led led-red"    id="ledRed"></div><span>DANGER</span></div>
+        <div class="led-item"><div class="led led-yellow" id="ledYellow"></div><span>WARNING</span></div>
+        <div class="led-item"><div class="led led-green"  id="ledGreen"></div><span>SAFE</span></div>
+        <div class="led-item"><div class="led led-buzzer" id="ledBuzzer"></div><span>BUZZER</span></div>
+      </div>
+    </section>
+
+    <!-- ─── SENSOR CONTROLS (Wokwi-style sliders) ─── -->
+    <section class="section-title">
+      Sensor Controls
+      <span class="section-hint">Adjust values like Wokwi sliders — drag to simulate sensor conditions</span>
+      <button class="reset-btn" id="resetBtn" onclick="resetAllOverrides()">↺ Reset to diagram.json</button>
+    </section>
+    <div class="controls-grid" id="controlsGrid">
+
+      <div class="ctrl-card" id="ctrl-milk_temp">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">🌡️</span>
+          <div>
+            <div class="ctrl-name">Milk Temp <span class="sensor-chip">DS18B20</span></div>
+            <div class="ctrl-base" id="base-milk_temp">Base: 6.3 °C</div>
+          </div>
+          <div class="ctrl-live" id="live-milk_temp">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-milk_temp"
+               min="-10" max="30" step="0.1" value="6.3"
+               oninput="onSlider('milk_temp', this.value)"
+               onchange="pushOverride('milk_temp', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">-10°C</span>
+          <span class="ctrl-val" id="sv-milk_temp">6.3 °C</span>
+          <span class="ctrl-max">30°C</span>
+          <button class="ctrl-release" onclick="releaseOverride('milk_temp')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-ph">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">🧪</span>
+          <div>
+            <div class="ctrl-name">pH Level <span class="sensor-chip">Potentiometer</span></div>
+            <div class="ctrl-base" id="base-ph">Base: 7.0 pH</div>
+          </div>
+          <div class="ctrl-live" id="live-ph">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-ph"
+               min="0" max="14" step="0.01" value="7.0"
+               oninput="onSlider('ph', this.value)"
+               onchange="pushOverride('ph', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0</span>
+          <span class="ctrl-val" id="sv-ph">7.00 pH</span>
+          <span class="ctrl-max">14</span>
+          <button class="ctrl-release" onclick="releaseOverride('ph')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-gas">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">💨</span>
+          <div>
+            <div class="ctrl-name">Gas / Spoilage <span class="sensor-chip">MQ Sensor</span></div>
+            <div class="ctrl-base" id="base-gas">Base: 350 ADC</div>
+          </div>
+          <div class="ctrl-live" id="live-gas">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-gas"
+               min="0" max="4095" step="10" value="350"
+               oninput="onSlider('gas', this.value)"
+               onchange="pushOverride('gas', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0</span>
+          <span class="ctrl-val" id="sv-gas">350 ADC</span>
+          <span class="ctrl-max">4095</span>
+          <button class="ctrl-release" onclick="releaseOverride('gas')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-turbidity">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">🌊</span>
+          <div>
+            <div class="ctrl-name">Turbidity <span class="sensor-chip">LDR Sensor</span></div>
+            <div class="ctrl-base" id="base-turbidity">Base: 2400 ADC</div>
+          </div>
+          <div class="ctrl-live" id="live-turbidity">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-turbidity"
+               min="0" max="4095" step="10" value="2400"
+               oninput="onSlider('turbidity', this.value)"
+               onchange="pushOverride('turbidity', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0</span>
+          <span class="ctrl-val" id="sv-turbidity">2400 ADC</span>
+          <span class="ctrl-max">4095</span>
+          <button class="ctrl-release" onclick="releaseOverride('turbidity')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-air_temp">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">🌡️</span>
+          <div>
+            <div class="ctrl-name">Air Temp <span class="sensor-chip">DHT22</span></div>
+            <div class="ctrl-base" id="base-air_temp">Base: 7.2 °C</div>
+          </div>
+          <div class="ctrl-live" id="live-air_temp">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-air_temp"
+               min="0" max="50" step="0.1" value="7.2"
+               oninput="onSlider('air_temp', this.value)"
+               onchange="pushOverride('air_temp', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0°C</span>
+          <span class="ctrl-val" id="sv-air_temp">7.2 °C</span>
+          <span class="ctrl-max">50°C</span>
+          <button class="ctrl-release" onclick="releaseOverride('air_temp')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-humidity">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">💧</span>
+          <div>
+            <div class="ctrl-name">Humidity <span class="sensor-chip">DHT22</span></div>
+            <div class="ctrl-base" id="base-humidity">Base: 45 %</div>
+          </div>
+          <div class="ctrl-live" id="live-humidity">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-humidity"
+               min="0" max="100" step="0.5" value="45"
+               oninput="onSlider('humidity', this.value)"
+               onchange="pushOverride('humidity', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0%</span>
+          <span class="ctrl-val" id="sv-humidity">45 %</span>
+          <span class="ctrl-max">100%</span>
+          <button class="ctrl-release" onclick="releaseOverride('humidity')">Auto</button>
+        </div>
+      </div>
+
+      <div class="ctrl-card" id="ctrl-weight">
+        <div class="ctrl-header">
+          <span class="ctrl-icon">⚖️</span>
+          <div>
+            <div class="ctrl-name">Weight <span class="sensor-chip">HX711 5kg</span></div>
+            <div class="ctrl-base" id="base-weight">Base: 650 g</div>
+          </div>
+          <div class="ctrl-live" id="live-weight">—</div>
+        </div>
+        <input type="range" class="ctrl-slider" id="sl-weight"
+               min="0" max="5000" step="10" value="650"
+               oninput="onSlider('weight', this.value)"
+               onchange="pushOverride('weight', this.value)" />
+        <div class="ctrl-footer">
+          <span class="ctrl-min">0g</span>
+          <span class="ctrl-val" id="sv-weight">650 g</span>
+          <span class="ctrl-max">5000g</span>
+          <button class="ctrl-release" onclick="releaseOverride('weight')">Auto</button>
+        </div>
+      </div>
+
+    </div><!-- /controls-grid -->
+
+    <!-- ─── PRIMARY SENSOR DISPLAY ─── -->
+    <section class="section-title">Live Sensor Readings</section>
+    <div class="cards-grid">
+
+      <div class="sensor-card" id="card-milk-temp">
+        <div class="card-icon">🌡️</div>
+        <div class="card-info"><div class="card-name">Milk Temperature</div><div class="card-unit">DS18B20</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-milkTemp">—</div>
+          <div class="card-unit-label">°C</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-milkTemp"></div></div>
+        <div class="card-range" id="range-milkTemp"></div>
+      </div>
+
+      <div class="sensor-card" id="card-ph">
+        <div class="card-icon">🧪</div>
+        <div class="card-info"><div class="card-name">pH Level</div><div class="card-unit">Potentiometer → ADC</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-ph">—</div>
+          <div class="card-unit-label">pH</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-ph"></div></div>
+        <div class="card-range" id="range-ph"></div>
+      </div>
+
+      <div class="sensor-card" id="card-gas">
+        <div class="card-icon">💨</div>
+        <div class="card-info"><div class="card-name">Gas / Spoilage</div><div class="card-unit">MQ Gas Sensor</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-gas">—</div>
+          <div class="card-unit-label">ADC</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-gas"></div></div>
+        <div class="card-range">Safe &lt;1600 · Warn &lt;2200 · Danger ≥2200</div>
+      </div>
+
+      <div class="sensor-card" id="card-turbidity">
+        <div class="card-icon">🌊</div>
+        <div class="card-info"><div class="card-name">Turbidity</div><div class="card-unit">LDR / Photoresistor</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-turbidity">—</div>
+          <div class="card-unit-label">ADC</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-turbidity"></div></div>
+        <div class="card-range">Danger &lt;1300 · Warn &lt;2000 · Safe ≥2000</div>
+      </div>
+
+    </div>
+
+    <div class="cards-grid cards-grid--3">
+
+      <div class="sensor-card" id="card-air-temp">
+        <div class="card-icon">🌡️</div>
+        <div class="card-info"><div class="card-name">Air Temperature</div><div class="card-unit">DHT22</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-airTemp">—</div>
+          <div class="card-unit-label">°C</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-airTemp"></div></div>
+        <div class="card-range">Warn threshold: &gt;35 °C</div>
+      </div>
+
+      <div class="sensor-card" id="card-humidity">
+        <div class="card-icon">💧</div>
+        <div class="card-info"><div class="card-name">Humidity</div><div class="card-unit">DHT22</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-humidity">—</div>
+          <div class="card-unit-label">%</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-humidity"></div></div>
+        <div class="card-range">Warn threshold: &gt;80 %</div>
+      </div>
+
+      <div class="sensor-card" id="card-weight">
+        <div class="card-icon">⚖️</div>
+        <div class="card-info"><div class="card-name">Weight</div><div class="card-unit">HX711 Load Cell (5 kg)</div></div>
+        <div class="card-value-wrap">
+          <div class="card-value" id="val-weight">—</div>
+          <div class="card-unit-label">g</div>
+        </div>
+        <div class="card-bar-wrapper"><div class="card-bar" id="bar-weight"></div></div>
+        <div class="card-range">Valid: 100 – 2000 g</div>
+      </div>
+
+    </div>
+
+    <!-- ─── HISTORY CHART ─── -->
+    <section class="section-title">History (last 60 readings · 2 s interval)</section>
+    <div class="chart-container">
+      <canvas id="histChart"></canvas>
+    </div>
+
+    <!-- ─── HISTORY TABLE ─── -->
+    <section class="section-title">Recent Readings</section>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time</th><th>Product</th><th>Milk °C</th><th>pH</th>
+            <th>Gas</th><th>Turbidity</th><th>Weight g</th>
+            <th>Air °C</th><th>Hum%</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

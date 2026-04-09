@@ -1,0 +1,48 @@
+[wokwi]
+version = 1
+firmware = "sketch.ino"
+elf = "build/sketch.ino.elf"
+
+[[libraries]]
+name = "Adafruit SSD1306"
+version = "latest"
+
+[[libraries]]
+name = "Adafruit GFX"
+version = "latest"
+
+[[libraries]]
+name = "DHT sensor library"
+version = "latest"
+
+[[libraries]]
+name = "HX711"
+version = "latest"
+
+[[libraries]]
+name = "OneWire"
+version = "latest"
+
+[[libraries]]
+name = "DallasTemperature"
+version = "latest"
+
+[[libraries]]
+name = "Blynk"
+version = "latest"
+
+[[libraries]]
+name = "WiFiManager"
+version = "latest"
+
+[[libraries]]
+name = "PubSubClient"
+version = "latest"
+
+[[libraries]]
+name = "ESP8266HTTPClient"
+version = "latest"
+
+[[libraries]]
+name = "ESP8266WebServer"
+version = "latest"          
