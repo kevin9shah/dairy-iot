@@ -1,1 +1,1 @@
-# diary-iot
+# dairy-iot
