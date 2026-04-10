@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Dairy Monitor</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body class="theme-safe">
+  <!-- Animated Background Environment -->
+  <div class="environment-container" id="environment">
+    <div class="ambient-glow"></div>
+    <div class="particles" id="particles"></div>
+    <div class="status-overlay"></div>
+  </div>
+
+  <!-- Dashboard UI -->
+  <div class="dashboard">
+    <header class="header glass-panel">
+      <div>
+        <h1>Smart Dairy Monitor</h1>
+        <p class="subtitle">Real-time Spoilage Detection</p>
+      </div>
+      <div class="controls">
+        <button id="btnConnect" class="btn primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          Connect ESP32 (USB)
+        </button>
+        <button id="btnSimulate" class="btn secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Simulate Data
+        </button>
+      </div>
+    </header>
+
+    <main class="metrics-grid">
+      <div class="metric-card glass-panel" id="card-temp">
+        <div class="icon-wrapper temp-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h3>Temperature</h3>
+          <div class="value-display">
+            <span id="tempValue">--</span><span class="unit">°C</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card glass-panel" id="card-hum">
+        <div class="icon-wrapper hum-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a5 5 0 0 0 5-5c0-2-5-10-5-10S7 15 7 17a5 5 0 0 0 5 5z"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h3>Humidity</h3>
+          <div class="value-display">
+            <span id="humValue">--</span><span class="unit">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-card glass-panel status-card" id="card-status">
+        <div class="icon-wrapper status-icon">
+          <svg id="statusIconSvg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+        </div>
+        <div class="metric-info">
+          <h3>Overall Status</h3>
+          <div class="status-display">
+            <span id="statusValue">OFFLINE</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="log-panel glass-panel">
+      <h3>Live Sensor Feed</h3>
+      <div id="logContainer" class="log-container">
+        <!-- Logs go here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
